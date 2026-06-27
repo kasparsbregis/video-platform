@@ -1,8 +1,8 @@
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
-import { getSession } from "@/lib/auth/server";
+import { requireUser } from "@/lib/auth/require-user";
 
 export default async function SettingsPage() {
-  const session = await getSession();
+  const session = await requireUser();
 
   return (
     <>
@@ -19,11 +19,11 @@ export default async function SettingsPage() {
           <div style={{ padding: "20px" }}>
             <div className="form-field" style={{ marginBottom: 16 }}>
               <span className="form-label">Name</span>
-              <span style={{ fontSize: "0.9375rem" }}>{session?.name}</span>
+              <span style={{ fontSize: "0.9375rem" }}>{session.name}</span>
             </div>
             <div className="form-field">
               <span className="form-label">Email</span>
-              <span style={{ fontSize: "0.9375rem" }}>{session?.email}</span>
+              <span style={{ fontSize: "0.9375rem" }}>{session.email}</span>
             </div>
           </div>
         </div>

@@ -1,13 +1,11 @@
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth/server";
+import { requireUser } from "@/lib/auth/require-user";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import "../app.css";
 
 export default async function DashboardLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const session = await getSession();
-  if (!session) redirect("/login");
+  const session = await requireUser();
 
   return (
     <div className="dashboard-shell">

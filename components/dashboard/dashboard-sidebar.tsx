@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogoMark } from "@/components/landing/icons";
 import { LogoutButton } from "./logout-button";
-import type { SessionUser } from "@/lib/auth/session";
+import type { SessionUser } from "@/lib/auth/types";
 
 const mainNav = [
   {

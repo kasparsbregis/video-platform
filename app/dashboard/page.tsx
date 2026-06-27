@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { getSession } from "@/lib/auth/server";
+import { requireUser } from "@/lib/auth/require-user";
 import {
   DashboardTopbar,
   DashboardTopbarLink,
 } from "@/components/dashboard/dashboard-topbar";
 import {
-  IconActivity,
   IconBuild,
   IconChevronRight,
   IconCheck,
@@ -16,11 +15,7 @@ import {
   IconPublished,
   IconUpload,
 } from "@/components/dashboard/icons";
-import {
-  MOCK_ACTIVITY,
-  MOCK_EXERCISES,
-  MOCK_PROGRAMS,
-} from "@/lib/data/mock";
+import { getDashboardOverview } from "@/lib/data/queries";
 
 function formatDate(): string {
   return new Date().toLocaleDateString("en-GB", {
@@ -34,23 +29,17 @@ function firstName(fullName: string): string {
   return fullName.split(" ")[0] ?? fullName;
 }
 
-const activityIcons = {
-  upload: IconUpload,
-  publish: IconPublished,
-  pdf: IconPdf,
-  edit: IconBuild,
-} as const;
-
 export default async function DashboardOverviewPage() {
-  const session = await getSession();
-  const publishedPrograms = MOCK_PROGRAMS.filter((p) => p.status === "published").length;
-  const draftPrograms = MOCK_PROGRAMS.length - publishedPrograms;
-  const recentPrograms = [...MOCK_PROGRAMS]
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-    .slice(0, 4);
-  const recentExercises = [...MOCK_EXERCISES]
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-    .slice(0, 4);
+  const session = await requireUser();
+  const overview = await getDashboardOverview(session.id);
+  const {
+    exerciseCount,
+    programCount,
+    publishedCount,
+    draftCount,
+    recentPrograms,
+    recentExercises,
+  } = overview;
 
   return (
     <>
@@ -65,7 +54,7 @@ export default async function DashboardOverviewPage() {
           <div className="dash-welcome-text">
             <p className="dash-welcome-date">{formatDate()}</p>
             <h1 className="dash-welcome-title">
-              Good {getGreeting()}, {firstName(session?.name ?? "there")}
+              Good {getGreeting()}, {firstName(session.name)}
             </h1>
             <p className="dash-welcome-sub">
               Your exercise library and programs at a glance. Everything you need
@@ -102,9 +91,8 @@ export default async function DashboardOverviewPage() {
               <span className="dash-stat-icon dash-stat-icon--teal">
                 <IconExercises />
               </span>
-              <span className="dash-stat-trend dash-stat-trend--up">+1 this week</span>
             </div>
-            <div className="dash-stat-value">{MOCK_EXERCISES.length}</div>
+            <div className="dash-stat-value">{exerciseCount}</div>
             <div className="dash-stat-label">Exercises in library</div>
           </div>
 
@@ -113,9 +101,9 @@ export default async function DashboardOverviewPage() {
               <span className="dash-stat-icon dash-stat-icon--indigo">
                 <IconPrograms />
               </span>
-              <span className="dash-stat-trend">{draftPrograms} draft</span>
+              <span className="dash-stat-trend">{draftCount} draft</span>
             </div>
-            <div className="dash-stat-value">{MOCK_PROGRAMS.length}</div>
+            <div className="dash-stat-value">{programCount}</div>
             <div className="dash-stat-label">Total programs</div>
           </div>
 
@@ -124,9 +112,11 @@ export default async function DashboardOverviewPage() {
               <span className="dash-stat-icon dash-stat-icon--emerald">
                 <IconPublished />
               </span>
-              <span className="dash-stat-trend dash-stat-trend--up">Active</span>
+              {publishedCount > 0 && (
+                <span className="dash-stat-trend dash-stat-trend--up">Active</span>
+              )}
             </div>
-            <div className="dash-stat-value">{publishedPrograms}</div>
+            <div className="dash-stat-value">{publishedCount}</div>
             <div className="dash-stat-label">Published programs</div>
           </div>
 
@@ -137,7 +127,7 @@ export default async function DashboardOverviewPage() {
               </span>
               <span className="dash-stat-trend">Auto-generated</span>
             </div>
-            <div className="dash-stat-value">{publishedPrograms}</div>
+            <div className="dash-stat-value">{publishedCount}</div>
             <div className="dash-stat-label">PDF exports ready</div>
           </div>
         </div>
@@ -154,67 +144,44 @@ export default async function DashboardOverviewPage() {
                 <IconChevronRight />
               </Link>
             </div>
-            <div className="dash-table-wrap">
-              <table className="dash-table">
-                <thead>
-                  <tr>
-                    <th>Program</th>
-                    <th>Exercises</th>
-                    <th>Status</th>
-                    <th>Updated</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentPrograms.map((program) => (
-                    <tr key={program.id}>
-                      <td>
-                        <Link href={`/dashboard/programs/${program.id}`} className="dash-table-name">
-                          {program.name}
-                        </Link>
-                      </td>
-                      <td>{program.exerciseCount}</td>
-                      <td>
-                        <span
-                          className={`badge ${
-                            program.status === "published" ? "badge-success" : "badge-muted"
-                          }`}
-                        >
-                          {program.status}
-                        </span>
-                      </td>
-                      <td className="dash-table-muted">{program.updatedAt}</td>
+            {recentPrograms.length === 0 ? (
+              <p className="dash-panel-empty">No programs yet. Create your first program.</p>
+            ) : (
+              <div className="dash-table-wrap">
+                <table className="dash-table">
+                  <thead>
+                    <tr>
+                      <th>Program</th>
+                      <th>Exercises</th>
+                      <th>Status</th>
+                      <th>Updated</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section className="dash-panel">
-            <div className="dash-panel-header">
-              <div>
-                <h2 className="dash-panel-title">Recent activity</h2>
-                <p className="dash-panel-sub">Latest changes in your workspace</p>
+                  </thead>
+                  <tbody>
+                    {recentPrograms.map((program) => (
+                      <tr key={program.id}>
+                        <td>
+                          <Link href={`/dashboard/programs/${program.id}`} className="dash-table-name">
+                            {program.name}
+                          </Link>
+                        </td>
+                        <td>{program.exerciseCount}</td>
+                        <td>
+                          <span
+                            className={`badge ${
+                              program.status === "published" ? "badge-success" : "badge-muted"
+                            }`}
+                          >
+                            {program.status}
+                          </span>
+                        </td>
+                        <td className="dash-table-muted">{program.updatedAt}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <IconActivity className="dash-panel-header-icon" />
-            </div>
-            <ul className="dash-activity-list">
-              {MOCK_ACTIVITY.map((item) => {
-                const Icon = activityIcons[item.type];
-                return (
-                  <li key={item.id} className="dash-activity-item">
-                    <span className={`dash-activity-icon dash-activity-icon--${item.type}`}>
-                      <Icon />
-                    </span>
-                    <div className="dash-activity-body">
-                      <span className="dash-activity-title">{item.title}</span>
-                      <span className="dash-activity-detail">{item.detail}</span>
-                    </div>
-                    <span className="dash-activity-time">{item.time}</span>
-                  </li>
-                );
-              })}
-            </ul>
+            )}
           </section>
 
           <section className="dash-panel dash-panel--workflow">
@@ -225,27 +192,27 @@ export default async function DashboardOverviewPage() {
               </div>
             </div>
             <ol className="dash-workflow">
-              <li className="dash-workflow-step is-done">
+              <li className={`dash-workflow-step${exerciseCount > 0 ? " is-done" : " is-current"}`}>
                 <span className="dash-workflow-marker">
-                  <IconCheck />
+                  {exerciseCount > 0 ? <IconCheck /> : <IconClock />}
                 </span>
                 <div>
                   <strong>Upload exercises</strong>
                   <p>Record 3–5 reps with audio, text &amp; thumbnails</p>
                 </div>
               </li>
-              <li className="dash-workflow-step is-done">
+              <li className={`dash-workflow-step${programCount > 0 ? " is-done" : exerciseCount > 0 ? " is-current" : ""}`}>
                 <span className="dash-workflow-marker">
-                  <IconCheck />
+                  {programCount > 0 ? <IconCheck /> : <IconClock />}
                 </span>
                 <div>
                   <strong>Build program</strong>
                   <p>Order exercises and prescribe sets, reps &amp; weight</p>
                 </div>
               </li>
-              <li className="dash-workflow-step is-current">
+              <li className={`dash-workflow-step${publishedCount > 0 ? " is-done" : programCount > 0 ? " is-current" : ""}`}>
                 <span className="dash-workflow-marker">
-                  <IconClock />
+                  {publishedCount > 0 ? <IconCheck /> : <IconClock />}
                 </span>
                 <div>
                   <strong>Deliver to patient</strong>
@@ -266,26 +233,30 @@ export default async function DashboardOverviewPage() {
                 <IconChevronRight />
               </Link>
             </div>
-            <ul className="dash-exercise-list">
-              {recentExercises.map((exercise) => (
-                <li key={exercise.id}>
-                  <Link href={`/dashboard/exercises/${exercise.id}`} className="dash-exercise-item">
-                    <span className="dash-exercise-thumb" aria-hidden="true">
-                      <IconExercises />
-                    </span>
-                    <span className="dash-exercise-body">
-                      <strong>{exercise.name}</strong>
-                      <span>
-                        {exercise.videoDuration}
-                        {exercise.hasAudio ? " · Audio" : ""}
-                        {exercise.thumbnails > 0 ? ` · ${exercise.thumbnails} thumbs` : ""}
+            {recentExercises.length === 0 ? (
+              <p className="dash-panel-empty">No exercises yet. Upload your first demonstration.</p>
+            ) : (
+              <ul className="dash-exercise-list">
+                {recentExercises.map((exercise) => (
+                  <li key={exercise.id}>
+                    <Link href={`/dashboard/exercises/${exercise.id}`} className="dash-exercise-item">
+                      <span className="dash-exercise-thumb" aria-hidden="true">
+                        <IconExercises />
                       </span>
-                    </span>
-                    <span className="dash-exercise-date">{exercise.updatedAt}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                      <span className="dash-exercise-body">
+                        <strong>{exercise.name}</strong>
+                        <span>
+                          {exercise.videoDuration}
+                          {exercise.hasAudio ? " · Audio" : ""}
+                          {exercise.thumbnails > 0 ? ` · ${exercise.thumbnails} thumbs` : ""}
+                        </span>
+                      </span>
+                      <span className="dash-exercise-date">{exercise.updatedAt}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
         </div>
       </div>

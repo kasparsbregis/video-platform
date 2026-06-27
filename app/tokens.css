@@ -1,0 +1,104 @@
+/* Shared design tokens — landing, auth, dashboard */
+:root {
+  --bg:           #06080f;
+  --bg-elevated:  #0c1019;
+  --bg-subtle:    #111827;
+  --surface:      rgba(255, 255, 255, 0.04);
+  --surface-hover:rgba(255, 255, 255, 0.07);
+  --glass:        rgba(255, 255, 255, 0.06);
+  --glass-strong: rgba(255, 255, 255, 0.10);
+  --border:       rgba(255, 255, 255, 0.08);
+  --border-strong:rgba(255, 255, 255, 0.14);
+  --ink:          #f1f5f9;
+  --ink-2:        #94a3b8;
+  --ink-3:        #64748b;
+  --accent:       #2dd4bf;
+  --accent-dim:   #14b8a6;
+  --accent-glow:  rgba(45, 212, 191, 0.35);
+  --accent-bg:    rgba(45, 212, 191, 0.10);
+  --accent-bg2:   rgba(45, 212, 191, 0.16);
+  --indigo:       #818cf8;
+  --indigo-glow:  rgba(129, 140, 248, 0.25);
+  --emerald:      #34d399;
+  --danger:       #f87171;
+  --danger-bg:    rgba(248, 113, 113, 0.12);
+  --nav-bg:       rgba(6, 8, 15, 0.72);
+  --sidebar-w:    280px;
+  --card-shadow:  0 0 0 1px var(--border), 0 8px 32px rgba(0, 0, 0, 0.45);
+  --card-hover:   0 0 0 1px var(--border-strong), 0 16px 48px rgba(0, 0, 0, 0.55);
+  --radius-sm:    10px;
+  --radius-md:    16px;
+  --radius-lg:    24px;
+  --radius-xl:    32px;
+  --transition:   background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  --mesh-1:       rgba(45, 212, 191, 0.18);
+  --mesh-2:       rgba(99, 102, 241, 0.14);
+  --mesh-3:       rgba(52, 211, 153, 0.10);
+  --grid-color:   rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="light"] {
+  --bg:           #f8fafc;
+  --bg-elevated:  #ffffff;
+  --bg-subtle:    #f1f5f9;
+  --surface:      rgba(255, 255, 255, 0.85);
+  --surface-hover:rgba(255, 255, 255, 0.95);
+  --glass:        rgba(255, 255, 255, 0.72);
+  --glass-strong: rgba(255, 255, 255, 0.88);
+  --border:       rgba(15, 23, 42, 0.08);
+  --border-strong:rgba(15, 23, 42, 0.14);
+  --ink:          #0f172a;
+  --ink-2:        #475569;
+  --ink-3:        #64748b;
+  --accent:       #0d9488;
+  --accent-dim:   #0f766e;
+  --accent-glow:  rgba(13, 148, 136, 0.20);
+  --accent-bg:    rgba(13, 148, 136, 0.08);
+  --accent-bg2:   rgba(13, 148, 136, 0.14);
+  --indigo:       #6366f1;
+  --indigo-glow:  rgba(99, 102, 241, 0.12);
+  --danger:       #dc2626;
+  --danger-bg:    rgba(220, 38, 38, 0.08);
+  --nav-bg:       rgba(248, 250, 252, 0.82);
+  --card-shadow:  0 0 0 1px var(--border), 0 8px 32px rgba(15, 23, 42, 0.06);
+  --card-hover:   0 0 0 1px var(--border-strong), 0 16px 48px rgba(15, 23, 42, 0.10);
+  --mesh-1:       rgba(13, 148, 136, 0.12);
+  --mesh-2:       rgba(99, 102, 241, 0.08);
+  --mesh-3:       rgba(52, 211, 153, 0.06);
+  --grid-color:   rgba(15, 23, 42, 0.04);
+}
+
+/* Explicit dark theme (matches :root defaults) */
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+}
+
+/* Base page colors — must live here, not in globals.css (Tailwind strips it) */
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+  background-color: var(--bg);
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+  background-color: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  transition: var(--transition);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+a { color: inherit; text-decoration: none; }
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}

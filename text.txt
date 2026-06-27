@@ -1,0 +1,195 @@
+I want you to act as an award-winning UI/UX designer specializing in modern SaaS and healthcare products.
+
+Your task is to completely redesign my homepage from scratch. Do not simply improve the existing design—create an entirely new visual direction while keeping the content structure and purpose.
+
+Target Audience
+
+The website is built for:
+
+Physiotherapists
+Sports physiotherapists
+Personal trainers
+Strength & Conditioning coaches
+Athletic trainers
+Movement specialists
+Rehabilitation clinics
+
+The overall feeling should communicate:
+
+Professionalism
+Trust
+Innovation
+Simplicity
+Premium quality
+Performance
+Human movement
+
+It should feel like a product professionals would happily pay for every month.
+
+Design Style
+
+I do NOT want a generic SaaS landing page.
+
+The design should be visually memorable.
+
+You have full creative freedom.
+
+Possible inspirations:
+
+Apple
+Linear
+Raycast
+Stripe
+Vercel
+Notion
+Framer
+Figma
+
+Mix these inspirations into something unique.
+
+Theme
+
+Do NOT assume either light mode or dark mode.
+
+Choose whichever creates the strongest visual identity.
+
+Hero Section
+
+The hero section should be the centerpiece of the page.
+
+Avoid a plain solid background.
+
+Instead, create something visually engaging such as:
+
+abstract flowing gradients
+soft mesh gradients
+layered blurred shapes
+subtle 3D depth
+glassmorphism cards
+floating interface elements
+glowing accents
+motion-inspired patterns
+anatomy or movement-inspired abstract graphics
+dynamic lighting
+premium geometric backgrounds
+
+The background should add depth without distracting from the content.
+
+The hero should immediately communicate:
+
+"This is a premium platform for movement professionals."
+
+Glassmorphism
+
+I like glassmorphism, but only when used tastefully.
+
+Use translucent cards, soft borders, blur, and subtle shadows if they improve the design.
+
+Do NOT overuse it.
+
+Visual Direction
+
+Use:
+
+generous whitespace
+large typography
+smooth rounded corners
+premium spacing
+soft shadows
+elegant gradients
+subtle depth
+refined color hierarchy
+
+Avoid:
+
+clutter
+outdated UI
+harsh borders
+excessive colors
+generic templates
+Components
+
+Feel free to redesign every section.
+
+Examples:
+
+Hero
+Navigation
+Statistics
+Features
+Video preview
+Testimonials
+Pricing
+FAQ
+CTA
+Footer
+
+You may reorder sections if it improves the experience.
+
+Color Palette
+
+Choose a modern palette suitable for healthcare and technology.
+
+Think:
+
+blue
+teal
+emerald
+indigo
+slate
+neutral grays
+
+Accent colors are welcome but should be used sparingly.
+
+Typography
+
+Use modern typography with a strong visual hierarchy.
+
+The homepage should immediately feel premium.
+
+Micro-interactions
+
+Design with animations in mind.
+
+Suggest places where subtle animations could improve the experience:
+
+fade-ins
+floating elements
+hover effects
+glowing gradients
+moving background shapes
+animated cards
+parallax
+smooth section transitions
+
+Nothing should feel gimmicky.
+
+Mobile Experience
+
+Design mobile-first.
+
+The layout should look exceptional on desktop, tablet, and mobile.
+
+Accessibility
+
+Maintain strong readability and sufficient contrast.
+
+Avoid sacrificing usability for aesthetics.
+
+Creativity
+
+Don't be conservative.
+
+Surprise me.
+
+I'm looking for a homepage that could realistically appear on:
+
+Awwwards
+Land-book
+Lapa Ninja
+Godly
+One Page Love
+
+while still remaining highly usable.
+
+The final result should feel like a premium SaaS product built specifically for physiotherapists and movement professionals—not a generic healthcare website.

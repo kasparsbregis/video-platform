@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import {
   getStreamVideo,
   mapWebhookStatusToExerciseStatus,
+  resolveExerciseVideoStatus,
 } from "@/lib/bunny/stream";
 import { validateBunnyWebhookSignature } from "@/lib/bunny/webhook";
 
@@ -15,9 +16,10 @@ type BunnyWebhookPayload = {
 async function applyBunnyVideoToExercise(
   exerciseId: string,
   bunnyVideo: Awaited<ReturnType<typeof getStreamVideo>>,
+  statusOverride?: "processing" | "ready" | "failed",
 ) {
   const { mapBunnyStatusToExerciseStatus } = await import("@/lib/bunny/stream");
-  const status = mapBunnyStatusToExerciseStatus(bunnyVideo);
+  const status = statusOverride ?? mapBunnyStatusToExerciseStatus(bunnyVideo);
   const durationSeconds =
     bunnyVideo.length > 0 ? Math.round(bunnyVideo.length) : null;
 
@@ -82,7 +84,11 @@ export async function POST(request: Request) {
 
   try {
     const bunnyVideo = await getStreamVideo(payload.VideoGuid);
-    await applyBunnyVideoToExercise(exercise.id, bunnyVideo);
+    const status = await resolveExerciseVideoStatus(
+      bunnyVideo,
+      payload.VideoGuid,
+    );
+    await applyBunnyVideoToExercise(exercise.id, bunnyVideo, status);
   } catch {
     return Response.json({ error: "Failed to sync video" }, { status: 500 });
   }

@@ -108,7 +108,7 @@ export function ExerciseEditor({
   useEffect(() => {
     if (status !== "processing") return;
 
-    const interval = setInterval(syncStatus, 2000);
+    const interval = setInterval(syncStatus, 1000);
     void syncStatus();
     return () => clearInterval(interval);
   }, [status, syncStatus]);
@@ -125,7 +125,7 @@ export function ExerciseEditor({
   useEffect(() => {
     if (justUploaded) {
       setMessage(
-        "Upload complete. Bunny is transcoding on their servers — preview typically appears in 15–60 seconds.",
+        "Upload complete. Bunny is encoding on their servers — this often takes 1–3 minutes on the free tier.",
       );
     }
   }, [justUploaded]);
@@ -232,11 +232,11 @@ export function ExerciseEditor({
                 </>
               ) : (
                 <>
-                  <strong>Bunny is transcoding…</strong>
+                  <strong>Bunny is encoding…</strong>
                   <p>
-                    Your upload finished in a couple of seconds. Bunny now encodes
-                    multiple quality levels on their servers — even short clips often
-                    take 30–90 seconds before preview is available.
+                    Your upload finished quickly. Bunny now transcodes on a shared
+                    queue — even short clips can take 1–3 minutes before preview
+                    appears. You can leave this page; status updates automatically.
                   </p>
                   <div className="encode-wait-meta">{processingHint()}</div>
                   {encodeProgress > 0 && (

@@ -162,16 +162,63 @@ export function isBunnyVideoPlayable(video: BunnyVideo): boolean {
     return true;
   }
 
+  // First resolution finished — don't wait for duration field to update
+  if (video.availableResolutions?.trim()) {
+    return true;
+  }
+
   // Bunny sets duration once the file is parsed — usually before full encode finishes
   if ((video.storageSize ?? 0) > 0 && (video.length ?? 0) > 0) {
     return true;
   }
 
-  if (video.availableResolutions && (video.length ?? 0) > 0) {
-    return true;
+  return false;
+}
+
+const PROBE_RESOLUTIONS = ["240p", "360p", "480p", "720p"] as const;
+
+/** HEAD/Range check — Bunny CDN often serves video before GET /videos reports ready. */
+export async function probeStreamPlaybackReady(videoId: string): Promise<boolean> {
+  for (const resolution of PROBE_RESOLUTIONS) {
+    const url = getPlaybackMp4Url(videoId, resolution);
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { Range: "bytes=0-1" },
+        cache: "no-store",
+      });
+      if (response.ok || response.status === 206) return true;
+    } catch {
+      // try next resolution
+    }
   }
 
-  return false;
+  const { hostname, tokenKey } = getBunnyStreamConfig();
+  const playlistUrl = withTokenQuery(
+    `https://${hostname}/${videoId}/playlist.m3u8`,
+    videoId,
+    tokenKey,
+  );
+
+  try {
+    const response = await fetch(playlistUrl, { cache: "no-store" });
+    if (!response.ok) return false;
+    const text = await response.text();
+    return text.includes("#EXTM3U");
+  } catch {
+    return false;
+  }
+}
+
+export function shouldProbeBunnyPlayback(video: BunnyVideo): boolean {
+  if (FAILED_API_STATUSES.has(video.status)) return false;
+  if (isBunnyVideoPlayable(video)) return false;
+  if (isBunnyUploadMissing(video)) return false;
+  return (
+    video.status >= BUNNY_API_STATUS.UPLOADED ||
+    (video.storageSize ?? 0) > 0 ||
+    (video.encodeProgress ?? 0) > 0
+  );
 }
 
 export function mapBunnyStatusToExerciseStatus(
@@ -180,6 +227,19 @@ export function mapBunnyStatusToExerciseStatus(
   if (FAILED_API_STATUSES.has(video.status)) return "failed";
   if (isBunnyVideoPlayable(video)) return "ready";
   return "processing";
+}
+
+/** API status + CDN probe — catches playable video before Bunny API catches up. */
+export async function resolveExerciseVideoStatus(
+  video: BunnyVideo,
+  videoId: string,
+): Promise<"processing" | "ready" | "failed"> {
+  let status = mapBunnyStatusToExerciseStatus(video);
+  if (status === "processing" && shouldProbeBunnyPlayback(video)) {
+    const playable = await probeStreamPlaybackReady(videoId);
+    if (playable) status = "ready";
+  }
+  return status;
 }
 
 export function mapWebhookStatusToExerciseStatus(

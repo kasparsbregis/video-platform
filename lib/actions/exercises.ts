@@ -13,8 +13,8 @@ import {
   getThumbnailUrl,
   getExercisePlaybackUrls,
   isBunnyUploadMissing,
-  isBunnyVideoPlayable,
   mapBunnyStatusToExerciseStatus,
+  resolveExerciseVideoStatus,
 } from "@/lib/bunny/stream";
 import { prisma } from "@/lib/prisma";
 
@@ -96,8 +96,9 @@ export type SyncStatusResult = {
 async function applyBunnyVideoToExercise(
   exerciseId: string,
   bunnyVideo: Awaited<ReturnType<typeof getStreamVideo>>,
+  statusOverride?: "processing" | "ready" | "failed",
 ) {
-  const status = mapBunnyStatusToExerciseStatus(bunnyVideo);
+  const status = statusOverride ?? mapBunnyStatusToExerciseStatus(bunnyVideo);
   const durationSeconds =
     bunnyVideo.length > 0 ? Math.round(bunnyVideo.length) : null;
 
@@ -133,12 +134,15 @@ export async function syncExerciseVideoStatus(
   }
 
   const bunnyVideo = await getStreamVideo(exercise.bunnyVideoId);
-  const status = mapBunnyStatusToExerciseStatus(bunnyVideo);
+  const status = await resolveExerciseVideoStatus(
+    bunnyVideo,
+    exercise.bunnyVideoId,
+  );
   const durationSeconds =
     bunnyVideo.length > 0 ? Math.round(bunnyVideo.length) : null;
   const uploadMissing = isBunnyUploadMissing(bunnyVideo);
   const stillEncoding =
-    isBunnyVideoPlayable(bunnyVideo) &&
+    status === "ready" &&
     bunnyVideo.status !== 4 &&
     bunnyVideo.status !== 8;
 
@@ -151,7 +155,7 @@ export async function syncExerciseVideoStatus(
       : { embedUrl: null, scrubVideoUrl: null };
 
   if (status !== exercise.status || durationSeconds !== exercise.durationSeconds) {
-    await applyBunnyVideoToExercise(exercise.id, bunnyVideo);
+    await applyBunnyVideoToExercise(exercise.id, bunnyVideo, status);
   }
 
   return {

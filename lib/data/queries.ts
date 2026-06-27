@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { formatVideoDuration } from "@/lib/bunny/stream";
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString("en-GB", {
@@ -39,7 +40,8 @@ export async function getDashboardOverview(userId: string) {
     recentExercises: exercises.slice(0, 4).map((exercise) => ({
       id: exercise.id,
       name: exercise.name,
-      videoDuration: exercise.status === "ready" ? "Ready" : exercise.status,
+      videoDuration: formatVideoDuration(exercise.durationSeconds),
+      status: exercise.status,
       hasAudio: Boolean(exercise.audioStoragePath),
       hasText: Boolean(exercise.textDescription),
       thumbnails: exercise._count.thumbnails,
@@ -67,17 +69,21 @@ export async function getProgramsForUser(userId: string) {
 export async function getExercisesForUser(userId: string) {
   const exercises = await prisma.exercise.findMany({
     where: { userId },
-    include: { _count: { select: { thumbnails: true } } },
+    include: {
+      _count: { select: { thumbnails: true, programs: true } },
+    },
     orderBy: { updatedAt: "desc" },
   });
 
   return exercises.map((exercise) => ({
     id: exercise.id,
     name: exercise.name,
-    videoDuration: exercise.status === "ready" ? "Ready" : exercise.status,
+    videoDuration: formatVideoDuration(exercise.durationSeconds),
+    status: exercise.status as "processing" | "ready" | "failed",
     hasAudio: Boolean(exercise.audioStoragePath),
     hasText: Boolean(exercise.textDescription),
     thumbnails: exercise._count.thumbnails,
+    programCount: exercise._count.programs,
     updatedAt: formatDate(exercise.updatedAt),
   }));
 }

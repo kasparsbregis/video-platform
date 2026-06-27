@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { ExerciseDeleteButton } from "@/components/exercises/exercise-delete-button";
 import { requireUser } from "@/lib/auth/require-user";
 import { getExercisesForUser } from "@/lib/data/queries";
+
+const statusLabels = {
+  processing: "Processing",
+  ready: "Ready",
+  failed: "Failed",
+} as const;
 
 export default async function ExercisesPage() {
   const user = await requireUser();
@@ -32,10 +39,13 @@ export default async function ExercisesPage() {
                 <tr>
                   <th>Name</th>
                   <th>Video</th>
+                  <th>Status</th>
                   <th>Audio</th>
                   <th>Text</th>
                   <th>Thumbnails</th>
+                  <th>Programs</th>
                   <th>Updated</th>
+                  <th aria-label="Actions" />
                 </tr>
               </thead>
               <tbody>
@@ -51,6 +61,11 @@ export default async function ExercisesPage() {
                     </td>
                     <td>{exercise.videoDuration}</td>
                     <td>
+                      <span className={`badge badge-status badge-status--${exercise.status}`}>
+                        {statusLabels[exercise.status]}
+                      </span>
+                    </td>
+                    <td>
                       <span className={`badge ${exercise.hasAudio ? "badge-success" : "badge-muted"}`}>
                         {exercise.hasAudio ? "Yes" : "No"}
                       </span>
@@ -61,7 +76,21 @@ export default async function ExercisesPage() {
                       </span>
                     </td>
                     <td>{exercise.thumbnails} / 4</td>
+                    <td>
+                      {exercise.programCount > 0 ? (
+                        <span className="badge badge-muted">{exercise.programCount}</span>
+                      ) : (
+                        <span className="dash-table-muted">—</span>
+                      )}
+                    </td>
                     <td>{exercise.updatedAt}</td>
+                    <td className="data-table-actions">
+                      <ExerciseDeleteButton
+                        exerciseId={exercise.id}
+                        exerciseName={exercise.name}
+                        programCount={exercise.programCount}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -132,8 +132,8 @@ export default async function DashboardOverviewPage() {
           </div>
         </div>
 
-        <div className="dash-bento">
-          <section className="dash-panel dash-panel--wide">
+        <div className="dash-bento dash-bento--overview">
+          <section className="dash-panel dash-panel-programs">
             <div className="dash-panel-header">
               <div>
                 <h2 className="dash-panel-title">Recent programs</h2>
@@ -168,9 +168,8 @@ export default async function DashboardOverviewPage() {
                         <td>{program.exerciseCount}</td>
                         <td>
                           <span
-                            className={`badge ${
-                              program.status === "published" ? "badge-success" : "badge-muted"
-                            }`}
+                            className={`badge ${program.status === "published" ? "badge-success" : "badge-muted"
+                              }`}
                           >
                             {program.status}
                           </span>
@@ -184,7 +183,7 @@ export default async function DashboardOverviewPage() {
             )}
           </section>
 
-          <section className="dash-panel dash-panel--workflow">
+          <section className="dash-panel dash-panel-workflow">
             <div className="dash-panel-header">
               <div>
                 <h2 className="dash-panel-title">Program workflow</h2>
@@ -222,7 +221,7 @@ export default async function DashboardOverviewPage() {
             </ol>
           </section>
 
-          <section className="dash-panel dash-panel--wide">
+          <section className="dash-panel dash-panel-exercises">
             <div className="dash-panel-header">
               <div>
                 <h2 className="dash-panel-title">Exercise library</h2>

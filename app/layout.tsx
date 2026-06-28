@@ -11,7 +11,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Video Platform — Custom Exercise Video Programs",
+  title: "KUSTIO - Custom Exercise Video Programs",
   description:
     "Upload exercise videos, build programs with sets, reps, time, and weight, and deliver video programs with auto-generated PDFs.",
 };
@@ -26,6 +26,7 @@ export default function RootLayout({
       lang="en"
       className={plusJakarta.variable}
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />

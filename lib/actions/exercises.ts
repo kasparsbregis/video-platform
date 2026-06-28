@@ -1,7 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { PlaybackMode } from "@prisma/client";
+import type {
+  ExerciseDifficulty,
+  ExerciseType,
+  PerformanceType,
+} from "@prisma/client";
 import { requireUser } from "@/lib/auth/require-user";
 import { requireExerciseForUser } from "@/lib/auth/assert-ownership";
 import { createTusUploadAuth } from "@/lib/bunny/sign";
@@ -10,12 +14,17 @@ import {
   createStreamVideo,
   deleteStreamVideo,
   getStreamVideo,
-  getThumbnailUrl,
   getExercisePlaybackUrls,
   isBunnyUploadMissing,
   mapBunnyStatusToExerciseStatus,
   resolveExerciseVideoStatus,
 } from "@/lib/bunny/stream";
+import {
+  deleteExerciseThumbnailFiles,
+  deleteStorageFile,
+  exerciseThumbnailStoragePath,
+} from "@/lib/bunny/storage";
+import { hasBunnyStorageConfig } from "@/lib/bunny/storage-config";
 import { prisma } from "@/lib/prisma";
 
 export type PrepareUploadResult =
@@ -199,7 +208,9 @@ export async function updateExerciseDetails(
   data: {
     name?: string;
     textDescription?: string;
-    playbackMode?: PlaybackMode;
+    performanceType?: PerformanceType | null;
+    exerciseType?: ExerciseType | null;
+    difficulty?: ExerciseDifficulty | null;
   },
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const user = await requireUser();
@@ -217,7 +228,11 @@ export async function updateExerciseDetails(
       ...(data.textDescription !== undefined
         ? { textDescription: data.textDescription.trim() || null }
         : {}),
-      ...(data.playbackMode !== undefined ? { playbackMode: data.playbackMode } : {}),
+      ...(data.performanceType !== undefined
+        ? { performanceType: data.performanceType }
+        : {}),
+      ...(data.exerciseType !== undefined ? { exerciseType: data.exerciseType } : {}),
+      ...(data.difficulty !== undefined ? { difficulty: data.difficulty } : {}),
     },
   });
 
@@ -230,7 +245,7 @@ export async function updateExerciseDetails(
 
 export async function saveExerciseThumbnails(
   exerciseId: string,
-  timestampsMs: number[],
+  frames: { timestampMs: number; storagePath: string }[],
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const user = await requireUser();
   const exercise = await requireExerciseForUser(exerciseId, user.id);
@@ -239,27 +254,71 @@ export async function saveExerciseThumbnails(
     return { ok: false, error: "Video is not ready yet." };
   }
 
-  if (timestampsMs.length === 0) {
+  if (!hasBunnyStorageConfig()) {
+    return {
+      ok: false,
+      error: "Thumbnail storage is not configured. Add Bunny Storage env vars.",
+    };
+  }
+
+  if (frames.length === 0) {
     return { ok: false, error: "Select at least one frame." };
   }
 
-  if (timestampsMs.length > 4) {
+  if (frames.length > 4) {
     return { ok: false, error: "You can save up to 4 thumbnails." };
   }
 
-  const unique = [...new Set(timestampsMs.map((ms) => Math.max(0, Math.round(ms))))];
+  const normalized = frames.map((frame, index) => ({
+    timestampMs: Math.max(0, Math.round(frame.timestampMs)),
+    storagePath: frame.storagePath.trim(),
+    sortOrder: index,
+  }));
+
+  if (normalized.some((frame) => !frame.storagePath.startsWith("users/"))) {
+    return { ok: false, error: "Invalid thumbnail storage path." };
+  }
+
+  const uniqueTimestamps = new Set(normalized.map((frame) => frame.timestampMs));
+  if (uniqueTimestamps.size !== normalized.length) {
+    return { ok: false, error: "Each thumbnail needs a different timestamp." };
+  }
+
+  const newPaths = new Set(normalized.map((frame) => frame.storagePath));
+
+  const oldPaths = exercise.thumbnails
+    .map((thumb) => thumb.bunnyThumbnailUrl)
+    .filter((path): path is string => Boolean(path?.startsWith("users/")));
+
+  const pathsToDelete = new Set<string>();
+
+  for (const path of oldPaths) {
+    if (!newPaths.has(path)) {
+      pathsToDelete.add(path);
+    }
+  }
+
+  // Drop unused index slots when saving fewer than 4 thumbnails.
+  for (let index = normalized.length; index < 4; index += 1) {
+    pathsToDelete.add(exerciseThumbnailStoragePath(user.id, exerciseId, index));
+  }
+
+  await Promise.all(
+    [...pathsToDelete].map((path) =>
+      deleteStorageFile(path).catch(() => {
+        // ignore missing files
+      }),
+    ),
+  );
 
   await prisma.$transaction([
     prisma.exerciseThumbnail.deleteMany({ where: { exerciseId } }),
     prisma.exerciseThumbnail.createMany({
-      data: unique.map((timestampMs, index) => ({
+      data: normalized.map((frame) => ({
         exerciseId,
-        timestampMs,
-        sortOrder: index,
-        bunnyThumbnailUrl: getThumbnailUrl(
-          exercise.bunnyVideoId!,
-          timestampMs / 1000,
-        ),
+        timestampMs: frame.timestampMs,
+        sortOrder: frame.sortOrder,
+        bunnyThumbnailUrl: frame.storagePath,
       })),
     }),
     prisma.exercise.update({
@@ -267,6 +326,36 @@ export async function saveExerciseThumbnails(
       data: { updatedAt: new Date() },
     }),
   ]);
+
+  revalidatePath("/dashboard/exercises");
+  revalidatePath(`/dashboard/exercises/${exerciseId}`);
+  revalidatePath("/dashboard");
+
+  return { ok: true };
+}
+
+export async function removeExerciseAudio(
+  exerciseId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const user = await requireUser();
+  const exercise = await requireExerciseForUser(exerciseId, user.id);
+
+  if (!exercise.audioStoragePath) {
+    return { ok: true };
+  }
+
+  if (hasBunnyStorageConfig()) {
+    try {
+      await deleteStorageFile(exercise.audioStoragePath);
+    } catch {
+      // Still clear DB if file was already removed
+    }
+  }
+
+  await prisma.exercise.update({
+    where: { id: exerciseId },
+    data: { audioStoragePath: null },
+  });
 
   revalidatePath("/dashboard/exercises");
   revalidatePath(`/dashboard/exercises/${exerciseId}`);
@@ -283,6 +372,7 @@ export async function deleteExercise(
   const exercise = await prisma.exercise.findFirst({
     where: { id: exerciseId, userId: user.id },
     include: {
+      thumbnails: true,
       programs: {
         include: { program: { select: { name: true } } },
       },
@@ -307,6 +397,26 @@ export async function deleteExercise(
       await deleteStreamVideo(exercise.bunnyVideoId);
     } catch {
       // DB cleanup still proceeds if Bunny video was already removed
+    }
+  }
+
+  if (exercise.audioStoragePath && hasBunnyStorageConfig()) {
+    try {
+      await deleteStorageFile(exercise.audioStoragePath);
+    } catch {
+      // DB cleanup still proceeds if storage file was already removed
+    }
+  }
+
+  if (hasBunnyStorageConfig()) {
+    const thumbnailPaths = exercise.thumbnails
+      .map((thumb) => thumb.bunnyThumbnailUrl)
+      .filter((path): path is string => Boolean(path?.startsWith("users/")));
+
+    try {
+      await deleteExerciseThumbnailFiles(user.id, exerciseId, thumbnailPaths);
+    } catch {
+      // DB cleanup still proceeds if storage files were already removed
     }
   }
 

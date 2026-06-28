@@ -106,7 +106,7 @@ export function DashboardSidebar({ user }: { user: SessionUser }) {
           <LogoMark />
         </div>
         <div>
-          <span className="sidebar-brand-text">Video Platform</span>
+          <span className="sidebar-brand-text">KUSTIO</span>
           <span className="sidebar-brand-sub">Admin panel</span>
         </div>
       </Link>

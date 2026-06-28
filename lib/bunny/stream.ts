@@ -306,7 +306,8 @@ export function getThumbnailUrl(videoId: string, timeSeconds: number): string {
 }
 
 export function formatVideoDuration(seconds: number | null | undefined): string {
-  if (!seconds || seconds <= 0) return "—";
+  if (seconds == null || !Number.isFinite(seconds) || seconds < 0) return "—";
+  if (seconds < 1) return "0 s";
   if (seconds < 60) return `${Math.round(seconds)} s`;
   const mins = Math.floor(seconds / 60);
   const secs = Math.round(seconds % 60);

@@ -60,9 +60,22 @@ model VerificationToken {
 
 // ── App domain ────────────────────────────────────────────────────────────────
 
-enum PlaybackMode {
-  guided
-  demo
+enum PerformanceType {
+  general
+  both_sides
+}
+
+enum ExerciseType {
+  mobility
+  stretch
+  stability
+  balance
+}
+
+enum ExerciseDifficulty {
+  beginner
+  intermediate
+  advanced
 }
 
 enum ExerciseStatus {
@@ -82,7 +95,9 @@ model Exercise {
   name             String
   bunnyVideoId     String?
   bunnyLibraryId   String?
-  playbackMode     PlaybackMode   @default(demo)
+  performanceType  PerformanceType?
+  exerciseType     ExerciseType?
+  difficulty       ExerciseDifficulty?
   audioStoragePath String?
   textDescription  String?        @db.Text
   status           ExerciseStatus @default(processing)

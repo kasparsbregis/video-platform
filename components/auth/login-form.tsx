@@ -14,7 +14,7 @@ export function LoginForm() {
     <div className="auth-card">
       <Link href="/" className="auth-logo">
         <LogoMark className="auth-logo-mark" />
-        <span className="auth-logo-text">Video Platform</span>
+        <span className="auth-logo-text">KUSTIO</span>
       </Link>
 
       <h1 className="auth-title">Sign in</h1>

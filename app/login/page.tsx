@@ -4,7 +4,7 @@ import { LoginForm } from "@/components/auth/login-form";
 import "../app.css";
 
 export const metadata: Metadata = {
-  title: "Sign in — Video Platform",
+  title: "Sign in - KUSTIO",
 };
 
 export default function LoginPage() {

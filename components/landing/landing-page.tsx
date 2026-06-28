@@ -29,11 +29,11 @@ export function LandingPage() {
       <header className="nav-shell backdrop-blur-sm">
         <nav className="nav" aria-label="Main navigation">
           <div className="nav-inner">
-            <Link href="/" className="nav-logo" aria-label="Video Platform home">
+            <Link href="/" className="nav-logo" aria-label="KUSTIO home">
               <div className="nav-logo-mark">
                 <LogoMark />
               </div>
-              <span className="nav-logo-text">Video Platform</span>
+              <span className="nav-logo-text">KUSTIO</span>
             </Link>
 
             <ul className="nav-links">
@@ -584,7 +584,7 @@ export function LandingPage() {
                 <LogoMark />
               </div>
               <span className="footer-copy">
-                © 2025 Video Platform. Your videos, your programs.
+                © 2025 KUSTIO. Your videos, your programs.
               </span>
             </div>
             <ul className="footer-links">

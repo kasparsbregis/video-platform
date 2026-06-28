@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 
 /** Bunny Stream token auth: SHA256(securityKey + videoId + expires) → base64url */
 export function signStreamToken(
